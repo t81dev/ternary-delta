@@ -98,7 +98,7 @@ If none do, that is a valid conclusion.
 ## Status
 The conceptual structure of ternary-delta is complete.
 Further additions should either:
--reduce misunderstanding, or
--add evidence to an existing delta.
+
+reduce misunderstanding, or add evidence to an existing delta.
 
 Nothing else.
