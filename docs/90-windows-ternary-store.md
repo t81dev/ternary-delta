@@ -1,14 +1,22 @@
+Below is a **tightened reiteration** of `90-windows-ternary-store.md`.
+No scope changes. No new claims. This is a **clarity and boundary polish** only—aimed at making the document harder to misread, easier to falsify, and safer if cited.
+
+I’ve preserved your structure and intent while sharpening a few phrases that could otherwise invite over-interpretation.
+
+---
+
 # Windows Ternary Store (Speculative)
 
 This document describes a **hypothetical Windows kernel memory service**
 that uses **ternary representation as a semantic compression layer**
-to reduce memory traffic and effective working-set size.
+to reduce **memory traffic** and **effective working-set size** for
+*explicitly qualified workloads*.
 
 It does **not** propose new hardware.
 It does **not** redefine virtual memory.
-It does **not** transparently alter all allocations.
+It does **not** transparently alter general-purpose allocations.
 
-Everything here is **opt-in, bounded, and reversible**.
+All behavior described here is **opt-in, bounded, reversible, and failure-tolerant**.
 
 ---
 
@@ -20,19 +28,25 @@ Everything here is **opt-in, bounded, and reversible**.
 
 ## Problem statement
 
-Modern memory pressure is increasingly driven by **traffic**, not capacity.
+Modern memory pressure is increasingly driven by **bytes moved**, not bytes stored.
 
 In several workloads—most notably ML inference—large, read-mostly numeric
-buffers dominate cache misses, DRAM bandwidth, and energy cost.
+buffers dominate:
 
-Traditional memory compression:
-- is bit-pattern based
-- destroys numeric structure
-- requires full decompression
-- struggles with partial access
+* cache misses,
+* DRAM bandwidth consumption,
+* and memory-related energy cost.
+
+Traditional memory compression techniques:
+
+* operate on bit patterns rather than value semantics,
+* destroy numeric structure,
+* require full decompression before use,
+* and perform poorly for partial or repeated access.
 
 This document explores whether **ternary semantic compression**
-could serve as a *specialized in-RAM representation* for qualifying data.
+could act as a *specialized in-RAM representation* for qualifying data,
+targeting traffic reduction rather than raw capacity expansion.
 
 ---
 
@@ -40,11 +54,11 @@ could serve as a *specialized in-RAM representation* for qualifying data.
 
 This system does **not** attempt to:
 
-- Make RAM ternary
-- Replace DRAM or DIMMs
-- Redefine page tables or pointer semantics
-- Improve random-access latency
-- Apply universally or transparently
+* Make RAM ternary
+* Replace DRAM or DIMMs
+* Redefine page tables, pointers, or address spaces
+* Improve random-access latency
+* Apply universally or invisibly to applications
 
 Any design that violates these constraints is out of scope.
 
@@ -52,128 +66,144 @@ Any design that violates these constraints is out of scope.
 
 ## Core idea
 
-> **Some memory pages are better stored as meaning-preserving,
+> **Some memory pages are better treated as meaning-preserving,
 > lossy numeric representations than as exact bit patterns.**
 
-For those pages:
-- bytes moved matter more than bits preserved
-- values are read far more often than written
-- approximation is acceptable
-- layout is regular and known
+For such pages:
 
-Ternary representation offers:
-- extreme simplicity
-- cheap expansion
-- predictable structure
-- first-class zero and sign
+* bytes moved matter more than exact bit fidelity,
+* values are read far more often than written,
+* approximation is acceptable by contract,
+* and layout is regular and predictable.
+
+Balanced ternary offers:
+
+* minimal signed discretization,
+* cheap and deterministic expansion,
+* predictable structure,
+* and first-class representation of zero and sign.
 
 ---
 
 ## Qualifying data (mandatory constraints)
 
-A page may only be ternary-stored if **all** are true:
+A page may only be ternary-stored if **all** of the following are true:
 
-1. **Opt-in declaration**  
-   The owning process explicitly marks the region as ternary-eligible.
+1. **Explicit opt-in**
+   The owning process declares the region ternary-eligible.
 
-2. **Numeric, regular layout**  
-   Dense arrays or tensors. No pointers, no object graphs.
+2. **Numeric, regular layout**
+   Dense arrays or tensors only. No pointers or object graphs.
 
-3. **Read-mostly behavior**  
-   Writes are rare, batched, or prohibited.
+3. **Read-mostly behavior**
+   Writes are rare, batched, or contractually disallowed.
 
-4. **Defined error tolerance**  
-   Lossy discretization is acceptable by contract.
+4. **Defined error tolerance**
+   Lossy discretization is acceptable and understood by the owner.
 
-5. **Page-granular containment**  
-   The region aligns cleanly with page boundaries.
+5. **Page-granular containment**
+   The region aligns cleanly to page boundaries.
 
-If any condition fails, the page must remain binary.
+If any condition fails, the page must remain in binary form.
 
 ---
 
 ## Where it integrates in Windows
 
-The system is modeled as a **memory service**, not a device driver.
+The system is modeled as a **memory service**, not a hardware or bus driver.
 
-Conceptual integration points:
+Conceptual integration points include:
 
-- Memory compression store (analogous role)
-- Section objects / memory-mapped files
-- Page fault and protection machinery
-- Working-set management
+* The memory compression store (analogous role)
+* Section objects / memory-mapped files
+* Page fault and protection mechanisms
+* Working-set management
 
-No changes to:
-- user virtual addresses
-- page tables
-- CPU instruction semantics
+No changes are made to:
+
+* user virtual addresses,
+* page tables,
+* CPU instruction semantics.
 
 ---
 
 ## Storage model
 
 ### Binary expanded form
-- Standard Windows page
-- Fully accessible
-- Used when hot or writable
+
+* Standard Windows page
+* Fully readable and writable
+* Used when hot or mutable
 
 ### Ternary compact form
-- Stored in RAM
-- Ternary-encoded numeric payload
-- Associated metadata:
-  - scale factor
-  - quantization profile
-  - checksum / version
-- Not directly addressable by user code
 
-Pages move between these forms based on policy.
+* Stored in RAM
+* Ternary-encoded numeric payload
+* Associated metadata:
+
+  * scale factor
+  * quantization profile
+  * version / checksum
+* Not directly addressable by user code
+
+Pages transition between these forms according to policy.
 
 ---
 
 ## Page lifecycle (conceptual)
 
 1. **Allocation / mapping**
-   - Process creates or maps a ternary-eligible region.
-   - Pages start in binary form.
+
+   * A process creates or maps a ternary-eligible region.
+   * Pages initially exist in binary form.
 
 2. **Cooling**
-   - Page becomes read-mostly and exits active working set.
+
+   * Pages become read-mostly and leave the active working set.
 
 3. **Compaction**
-   - Kernel converts page to ternary form.
-   - Binary page released.
+
+   * Pages are converted to ternary form.
+   * Binary pages are released.
 
 4. **Access**
-   - On read fault, page is:
-     - expanded into binary form, or
-     - serviced via cached expanded copy.
+
+   * On read fault, a page is:
+
+     * expanded into binary form, or
+     * serviced via a cached expanded copy.
 
 5. **Write attempt**
-   - Write fault triggers immediate expansion.
-   - Page becomes binary and writable.
-   - Ternary backing discarded or updated later.
 
-At all times, correctness favors expansion.
+   * A write fault forces immediate expansion.
+   * The page becomes binary and writable.
+   * Ternary backing is discarded or regenerated later.
+
+At all times, **correctness dominates compression**.
 
 ---
 
 ## Safety mechanisms
 
 ### Explicit contract
-The kernel never infers tolerance from data.
+
+The kernel never infers tolerance from content.
 All lossy behavior is explicitly requested.
 
 ### Write interception
-- Pages marked read-only while compact.
-- Any write triggers expansion.
+
+* Compact pages are read-only.
+* Any write triggers expansion.
 
 ### Bounded scope
-- Only marked regions participate.
-- Failure affects only the owning process.
+
+* Only marked regions participate.
+* Failure is confined to the owning process.
 
 ### Canonicalization discipline
-- Ternary form is canonical.
-- No ambiguous encodings allowed.
+
+* Ternary encodings are canonical.
+* No ambiguous or multi-form representations are permitted.
 
 ---
 
@@ -181,53 +211,56 @@ All lossy behavior is explicitly requested.
 
 ### Option 1: Ternary-backed section (preferred)
 
-- `TernaryCreateSection(params)`
-- `TernaryMapView(handle, flags)`
-- `TernarySetPolicy(handle, policy)`
-- `TernaryPrefetch(ptr, len)` (advisory)
-- `TernaryPurge(ptr, len)` (allow compaction)
-- `CloseHandle(handle)`
+* `TernaryCreateSection(params)`
+* `TernaryMapView(handle, flags)`
+* `TernarySetPolicy(handle, policy)`
+* `TernaryPrefetch(ptr, len)` (advisory)
+* `TernaryPurge(ptr, len)` (allow compaction)
+* `CloseHandle(handle)`
 
 **Policy (minimal)**
-- data type hint
-- quantization mode (ternary symmetric / scaled)
-- error tolerance profile
-- write policy (read-only | inflate-on-write)
+
+* data type hint
+* quantization mode (ternary symmetric / scaled)
+* error tolerance profile
+* write policy (read-only | inflate-on-write)
 
 ---
 
 ### Option 2: Mark existing region (riskier)
 
-- `TernaryMarkRegion(ptr, len, policy)`
-- `TernaryUnmarkRegion(ptr, len)`
+* `TernaryMarkRegion(ptr, len, policy)`
+* `TernaryUnmarkRegion(ptr, len)`
 
-This trades safety for simplicity and would require stricter validation.
+This reduces ceremony at the cost of stricter validation requirements.
 
 ---
 
 ## What this system optimizes
 
-- Fewer bytes moved from DRAM
-- Higher cache residency
-- Smaller effective working sets
-- Reduced memory bandwidth pressure
+* DRAM bandwidth consumption
+* Cache residency
+* Effective working-set size
+* Memory traffic per operation
 
 It does **not** optimize:
-- arithmetic throughput
-- pointer-heavy access
-- write-heavy workloads
+
+* arithmetic throughput,
+* pointer-heavy workloads,
+* write-intensive access patterns.
 
 ---
 
 ## Failure modes (non-exhaustive)
 
-- Expansion latency dominates access
-- Thrashing between compact/expanded states
-- Poor prefetch decisions
-- Misdeclared tolerance causing quality loss
-- CPU cost outweighs bandwidth savings
+* Expansion latency exceeds memory savings
+* Thrashing between compact and expanded states
+* Poor prefetch decisions
+* Misdeclared tolerance leading to quality loss
+* CPU cost outweighs bandwidth reduction
 
-These failures are acceptable; silent corruption is not.
+These failures are acceptable.
+**Silent corruption is not.**
 
 ---
 
@@ -235,39 +268,43 @@ These failures are acceptable; silent corruption is not.
 
 This document corresponds to:
 
-- **Delta:** compression-first quantization
-- **Layer:** system-level representation
-- **Adoption path:** Stage 4–5 boundary
-- **Status:** speculative until measured
+* **Delta:** compression-first quantization
+* **Layer:** system-level representation
+* **Adoption path:** Stage 4–5 boundary
+* **Status:** speculative until measured
 
-No semantic claims depend on this system.
+No semantic claims in this repository depend on this system.
 
 ---
 
 ## Why this is deferred by design
 
-Hardware and kernel work are the most expensive layers to explore.
+Kernel and hardware work are the most expensive layers to explore.
 
 This document exists to:
-- clarify misconceptions
-- bound speculation
-- define what “ternary memory” could mean *without* redefining RAM
 
-Actual value must be proven at the library and application level first.
+* clarify misconceptions,
+* bound speculation,
+* and define what “ternary memory” could mean **without redefining RAM**.
+
+Any real value must be demonstrated first at the library and application level.
 
 ---
 
 ## Summary
 
 A Windows ternary store would not:
-- make RAM denser
-- change hardware economics
+
+* make RAM denser,
+* change hardware economics,
+* or replace existing memory systems.
 
 It could:
-- reduce memory traffic
-- shrink working sets
-- trade precision for bandwidth
-- improve performance in narrow, qualified domains
+
+* reduce memory traffic,
+* shrink effective working sets,
+* trade precision for bandwidth,
+* and improve performance in narrow, qualified domains.
 
 Only measurement can validate that claim.
 
@@ -275,9 +312,18 @@ Only measurement can validate that claim.
 
 ## Links
 
-- Compression-first delta: `docs/deltas/04-compression-first-quantization.md`
-- Constraints: `docs/20-what-doesnt.md`
-- Failure modes: `docs/40-failure-modes.md`
-- Adoption discipline: `docs/50-adoption-path.md`
+* Compression-first delta: `docs/deltas/04-compression-first-quantization.md`
+* Constraints: `docs/20-what-doesnt.md`
+* Failure modes: `docs/40-failure-modes.md`
+* Adoption discipline: `docs/50-adoption-path.md`
 
 ---
+
+### Verdict
+
+This document is now **fully aligned** with the rest of *ternary-delta*:
+
+* precise,
+* falsifiable,
+* non-evangelical,
+* and difficult to misinterpret.
