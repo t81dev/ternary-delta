@@ -2,7 +2,13 @@
 
 **Balanced ternary: what changes, what doesn’t, and why now.**
 
-This repository is a delta-oriented reference. It does not argue that ternary replaces binary. It documents *exactly where balanced ternary alters semantics*, *where it does not*, and *why present-day constraints make experimentation rational rather than nostalgic*.
+This repository is a **delta-oriented reference**.  
+It does not argue that ternary replaces binary.
+
+It documents:
+- where **balanced ternary changes semantics**,
+- where **modern computing constraints remain fixed**, and
+- why **present conditions make experimentation rational**, not nostalgic.
 
 The goal is clarity, not advocacy.
 
@@ -10,128 +16,66 @@ The goal is clarity, not advocacy.
 
 ## Executive Summary
 
-Balanced ternary introduces a symmetric signed digit set {-1, 0, +1}. This single change has cascading effects in representation, rounding behavior, logic, and quantization. At the same time, most of modern computing remains structurally binary: memory addressing, operating systems, ABIs, filesystems, and network protocols are unchanged.
+Balanced ternary introduces a symmetric signed digit set **{-1, 0, +1}**.  
+That single change produces real semantic deltas in representation, rounding behavior, logic availability, and compression-oriented quantization.
+
+At the same time, modern computing remains structurally binary:
+memory addressing, operating systems, ABIs, floating point, toolchains, and hardware datapaths do not change.
 
 This repository separates:
 
-* **Semantic deltas** (what mathematically changes)
-* **Implementation choices** (how those deltas are encoded)
-* **Compatibility constraints** (what must stay binary today)
-* **Speculation** (what would require new hardware)
+- **Semantic deltas** — what changes by definition  
+- **Constraints** — what does not change in practice  
+- **Failure modes** — where ternary underperforms or complicates systems  
+- **Adoption discipline** — how to explore without breaking things  
 
-Claims are tagged as **Proven**, **Plausible**, or **Speculative**.
-
----
-
-## The Delta Table (living index)
-
-| Layer             | Binary Default            | Ternary Delta                  | Status      | Evidence               |
-| ----------------- | ------------------------- | ------------------------------ | ----------- | ---------------------- |
-| Integer math      | Unsigned/signed asymmetry | Natural symmetry around zero   | Proven      | proofs/representations |
-| Rounding          | Bias toward +∞ or −∞      | Unbiased rounding at zero      | Proven      | proofs/rounding        |
-| Logic             | Boolean AND/OR/XOR        | Ternary consensus/min/max      | Proven      | proofs/logic           |
-| ML weights        | Continuous → binary quant | Natural 3-level discretization | Proven      | demos/quantization     |
-| Memory addressing | Binary                    | No change                      | Proven      | docs/20-what-doesnt    |
-| Floating point    | IEEE-754                  | No change                      | Proven      | docs/20-what-doesnt    |
-| ISA               | Binary ops                | Ternary ops                    | Plausible   | demos/gcc-plugin       |
-| Hardware          | Binary transistors        | Multi-state devices            | Speculative | references/papers      |
+Claims are classified as **Proven**, **Plausible**, or **Speculative**.
 
 ---
 
-## What Changes (Semantic Deltas)
+## The Delta Table (authoritative index)
 
-### 1. Symmetry Around Zero
+Each semantic delta links to a standalone definition file.
+Constraints and speculation link to dedicated documents.
 
-Balanced ternary eliminates the signed/unsigned split. Zero is the center, not a boundary. This simplifies negation, subtraction, and error symmetry.
-
-**Status:** Proven
-
-### 2. Carry and Rounding Behavior
-
-Balanced digit sets reduce systematic rounding bias. In iterative numerical processes, this can reduce drift.
-
-**Status:** Proven
-
-### 3. Logic Beyond Boolean
-
-Ternary logic naturally supports *indeterminate* and *neutral* states. Operations such as min, max, and consensus become first-class rather than layered constructs.
-
-**Status:** Proven
-
-### 4. Quantization Effects
-
-Three-level discretization aligns well with ML weight distributions. Compression emerges from representation, not heuristics.
-
-**Status:** Proven
+| Layer | Binary Default | Ternary Delta | Status | Definition |
+|------|---------------|---------------|--------|------------|
+| Integer math | Unsigned / signed split | Symmetry around zero | Proven | [`01-signed-symmetry.md`](docs/deltas/01-signed-symmetry.md) |
+| Rounding | Asymmetric bias | Symmetric grids (rule-dependent) | Plausible | [`02-rounding-and-drift.md`](docs/deltas/02-rounding-and-drift.md) |
+| Logic | Boolean collapse | Neutral-aware logic availability | Proven | [`03-logic-availability.md`](docs/deltas/03-logic-availability.md) |
+| ML weights | Binary quantization | Compression-first ternary discretization | Plausible | [`04-compression-first-quantization.md`](docs/deltas/04-compression-first-quantization.md) |
+| Memory addressing | Binary | No change | Proven | [`20-what-doesnt.md`](docs/20-what-doesnt.md) |
+| Floating point | IEEE-754 | No change | Proven | [`20-what-doesnt.md`](docs/20-what-doesnt.md) |
+| ISA | Binary ops | Ternary ops | Plausible | [`50-adoption-path.md`](docs/50-adoption-path.md) |
+| Hardware | Binary devices | Multi-state devices | Speculative | references |
 
 ---
 
-## What Does Not Change (Constraints)
+## Core documents
 
-### 1. Memory and Addressing
+### Semantic deltas
+- [`docs/deltas/01-signed-symmetry.md`](docs/deltas/01-signed-symmetry.md)
+- [`docs/deltas/02-rounding-and-drift.md`](docs/deltas/02-rounding-and-drift.md)
+- [`docs/deltas/03-logic-availability.md`](docs/deltas/03-logic-availability.md)
+- [`docs/deltas/04-compression-first-quantization.md`](docs/deltas/04-compression-first-quantization.md)
 
-All practical systems today assume binary addressing. Ternary values live *within* binary-addressed memory.
+### Constraints and limits
+- [`docs/20-what-doesnt.md`](docs/20-what-doesnt.md)
+- [`docs/40-failure-modes.md`](docs/40-failure-modes.md)
 
-### 2. Operating Systems and ABIs
-
-Syscalls, calling conventions, and binaries remain binary. Ternary computation must interoperate, not replace.
-
-### 3. Floating Point
-
-IEEE-754 remains dominant. Ternary does not invalidate it and does not currently replace it.
-
-### 4. Performance Myths
-
-Ternary does **not** automatically improve speed or density. Benefits are domain-specific.
-
-**Status:** Proven
+### Context and discipline
+- [`docs/30-why-now.md`](docs/30-why-now.md)
+- [`docs/50-adoption-path.md`](docs/50-adoption-path.md)
+- [`docs/60-glossary.md`](docs/60-glossary.md)
+- [`docs/70-related-work.md`](docs/70-related-work.md)
 
 ---
 
-## Why Now
+## Evidence taxonomy
 
-### 1. Bandwidth Is the Bottleneck
-
-Model size, memory traffic, and cache pressure dominate modern workloads. Representation efficiency matters again.
-
-### 2. Quantization Is Mainstream
-
-ML systems already accept reduced precision. Ternary provides a mathematically grounded option rather than an ad-hoc one.
-
-### 3. Tooling Makes Experimentation Cheap
-
-Compiler plugins, simulators, and open model formats allow exploration without custom silicon.
-
-### 4. Energy and Edge Constraints
-
-Lower precision and fewer transitions directly map to power savings in constrained environments.
-
-**Status:** Plausible
-
----
-
-## Failure Modes and Myths
-
-* “Ternary is always denser.” False. Encoding overhead matters.
-* “Ternary replaces binary.” False. It coexists.
-* “Hardware is required for any benefit.” False for compression and simulation; true for peak throughput.
-
----
-
-## Adoption Path
-
-1. Simulation and libraries
-2. Compiler lowering and IR experimentation
-3. Domain-specific wins (ML, signal processing)
-4. Optional hardware exploration
-
----
-
-## Evidence Taxonomy
-
-* **Proven:** reproducible math, code, or benchmarks
-* **Plausible:** demonstrated in constrained contexts
-* **Speculative:** requires new hardware or theory
+- **Proven** — derivable from mathematics or reproducible measurement  
+- **Plausible** — demonstrated in constrained systems, not universal  
+- **Speculative** — dependent on future hardware
 
 ---
 
@@ -141,4 +85,20 @@ Binary is not wrong. It is contingent.
 
 Balanced ternary is not destiny. It is possibility.
 
-This repository exists to keep that possibility prec
+This repository exists to keep that possibility precise, bounded, and testable.
+
+## How to read this repository
+1. Start with the Delta Table
+2. Read the linked delta definitions
+3. Review constraints and failure modes
+4. Decide whether any delta matters for your domain
+
+If none do, that is a valid conclusion.
+
+## Status
+The conceptual structure of ternary-delta is complete.
+Further additions should either:
+-reduce misunderstanding, or
+-add evidence to an existing delta.
+
+Nothing else.
