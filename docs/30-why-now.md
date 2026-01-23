@@ -178,6 +178,3 @@ None of this implies inevitability.
 It implies opportunity.
 
 **Next:** `docs/40-failure-modes.md`
-
-When ready, the next file should deliberately document **where ternary breaks down, disappoints, or underperforms**.
-That document will complete the credibility triangle.
