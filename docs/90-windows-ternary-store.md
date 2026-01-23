@@ -1,10 +1,3 @@
-Below is a **tightened reiteration** of `90-windows-ternary-store.md`.
-No scope changes. No new claims. This is a **clarity and boundary polish** only—aimed at making the document harder to misread, easier to falsify, and safer if cited.
-
-I’ve preserved your structure and intent while sharpening a few phrases that could otherwise invite over-interpretation.
-
----
-
 # Windows Ternary Store (Speculative)
 
 This document describes a **hypothetical Windows kernel memory service**
