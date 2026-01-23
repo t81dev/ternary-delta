@@ -1,8 +1,3 @@
-Below is the **fully revised, clean reprint** of `docs/10-what-changes.md`, incorporating the tightening we discussed.
-This is a **drop-in replacement**: same structure, sharper contracts, no added hype.
-
----
-
 # What Changes
 
 This document describes **semantic deltas** introduced by **balanced ternary** (trits in {-1, 0, +1}). It avoids hardware claims and avoids assuming any particular storage encoding.
