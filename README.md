@@ -47,7 +47,7 @@ Constraints and speculation link to dedicated documents.
 | Memory addressing | Binary | No change | Proven | [`20-what-doesnt.md`](docs/20-what-doesnt.md) |
 | Floating point | IEEE-754 | No change | Proven | [`20-what-doesnt.md`](docs/20-what-doesnt.md) |
 | ISA | Binary ops | Ternary ops | Plausible | [`50-adoption-path.md`](docs/50-adoption-path.md) |
-| Hardware | Binary devices | Multi-state devices | Speculative | references |
+| Hardware | Binary devices | Multi-state devices | Speculative | [`80-hardware-notes.md`](docs/80-hardware-notes.md) |
 
 ---
 
