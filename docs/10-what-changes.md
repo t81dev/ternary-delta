@@ -14,6 +14,23 @@ For implementation details (bit encodings, tryte layouts, packing), those belong
 
 ---
 
+## Assumptions and scope
+
+All semantic deltas described in this document assume:
+
+1. **Canonical balanced-ternary form**  
+   Values are normalized such that each digit is in {-1, 0, +1} and carries are fully resolved at defined normalization points.
+
+2. **Well-defined normalization boundaries**  
+   Implementations may use lazy carries or alternative encodings internally, but must specify when canonicalization occurs (e.g., before comparison, serialization, or external observation).
+
+3. **Binary-hosted systems**  
+   These semantics are discussed independently of storage encoding and assume execution within today’s binary-addressed memory and toolchains.
+
+Violating these assumptions does not invalidate balanced ternary as a numeric system, but it *does* invalidate many of the guarantees described below.
+
+---
+
 ## 1) Representation symmetry around zero
 
 Balanced ternary uses digits that are symmetric about zero: -1, 0, +1.
