@@ -4,7 +4,7 @@
 
 This repository is a delta-oriented reference. It does not argue that ternary replaces binary. It documents *exactly where balanced ternary alters semantics*, *where it does not*, and *why present-day constraints make experimentation rational rather than nostalgic*.
 
-The goal is clarity, not advocacy.
+It is part of my broader collection of ternary-computing experiments; each repo under https://github.com/t81dev shares a different slice of the story, and this one is focused on describing what changes, what stays the same, and why experimentation makes sense now. The goal is clarity, not advocacy.
 
 ---
 
